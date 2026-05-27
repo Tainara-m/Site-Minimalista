@@ -3,8 +3,9 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <meta name="description" content="Tatááh Arts - Produtos personalizados com a sua identidade.">
-  <title>Tatááh Arts | by Tainara Martins</title>
+  <meta name="description" content="Presentes personalizados feitos à mão para datas especiais, lembranças, convites, álbuns e kits afetivos sob encomenda.">
+  <meta name="theme-color" content="#9B7DC8">
+  <title>Tatááh Arts | Presentes Personalizados Feitos à Mão</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@300;400;500;600;700&family=Cormorant+Garamond:ital,wght@0,300;0,400;1,300;1,400&family=Quicksand:wght@300;400;500;600&display=swap" rel="stylesheet">
@@ -20,7 +21,7 @@
 <!-- ─── HEADER ─── -->
 <header>
   <a href="#hero" class="logo-wrap">
-    <img class="logo-butterfly" src="icon/borboletatááh.png">
+    <img class="logo-butterfly" src="icon/borboletatááh.png" alt="Borboleta da Tatááh Arts">
     <span class="logo-text">Tatááh <span>Arts</span></span>
   </a>
 
@@ -29,7 +30,7 @@
   </button>
 
   <nav id="mainNav">
-    <a href="#sobre">Saber Mais</a>
+    <a href="#processo">Como funciona</a>
     <a href="#catalogo">Catálogo</a>
     <a href="#depoimentos">Depoimentos</a>
     <a href="#contato">Contato</a>
@@ -54,7 +55,7 @@
         </span>
       </span>
     </button>
-    <a href="#contato"><button class="btn-header-cta">Encomendar ✨</button></a>
+    <a href="https://wa.me/5531999471019?text=Ol%C3%A1%21%20Quero%20fazer%20uma%20encomenda%20personalizada%20%F0%9F%92%9C" target="_blank" rel="noopener"><button class="btn-header-cta">Encomendar ✨</button></a>
   </div>
 </header>
 
@@ -66,18 +67,23 @@
     Tatááh Arts,<br><span>presentes</span><br>personalizados
   </h1>
 
-  <p class="hero-tagline">Transformando simplicidade em história e arte</p>
+  <p class="hero-tagline">Presentes personalizados para emocionar em datas especiais</p>
 
   <p class="hero-sub">
-    Produtos únicos criados com cuidado, identidade e muito carinho — para guardar sentimentos e contar histórias.
+    Produtos feitos à mão, sob encomenda, com detalhes personalizados para transformar uma lembrança em um presente inesquecível.
   </p>
 
   <div class="hero-ctas">
-    <a href="#sobre"><button class="btn-primary">Saber Mais</button></a>
-    <a href="#catalogo"><button class="btn-outline-pill">Ver Catálogo</button></a>
+    <a href="https://wa.me/5531999471019?text=Ol%C3%A1%21%20Quero%20fazer%20uma%20encomenda%20personalizada%20%F0%9F%92%9C" target="_blank" rel="noopener"><button class="btn-primary">Quero encomendar</button></a>
+    <a href="#catalogo"><button class="btn-outline-pill">Ver catálogo</button></a>
     <a href="https://wa.me/5531999471019" target="_blank" rel="noopener">
       <button class="btn-ghost-pill"><i class="fa-brands fa-whatsapp"></i> Contato</button>
     </a>
+  </div>
+  <div class="trust-bar" aria-label="Diferenciais da Tatááh Arts">
+    <span><i class="fa-solid fa-heart"></i> Feito à mão</span>
+    <span><i class="fa-solid fa-wand-magic-sparkles"></i> Personalizável</span>
+    <span><i class="fa-solid fa-gift"></i> Pronto para presentear</span>
   </div>
 </section>
 
@@ -170,6 +176,21 @@
       <a href="https://wa.me/5531999471019" target="_blank" rel="noopener">
         <button class="btn-cta-sm">Solicitar orçamento 💜</button>
       </a>
+    </div>
+
+
+    <div class="catalog-tools" aria-label="Ferramentas do catálogo">
+      <label class="search-wrap" for="catalogSearch">
+        <i class="fa-solid fa-magnifying-glass"></i>
+        <input type="search" id="catalogSearch" placeholder="Buscar por produto, data ou ocasião..." autocomplete="off">
+      </label>
+      <button class="btn-clear-search" id="clearCatalogSearch" type="button">Limpar</button>
+    </div>
+    <p class="catalog-result-count" id="catalogResultCount" aria-live="polite"></p>
+    <div class="catalog-empty" id="catalogEmpty" hidden>
+      <strong>Nenhum produto encontrado.</strong>
+      <span>Tente buscar por “álbum”, “namorados”, “caixa” ou fale comigo no WhatsApp para uma peça sob encomenda.</span>
+      <a href="https://wa.me/5531999471019?text=Ol%C3%A1%21%20N%C3%A3o%20encontrei%20o%20produto%20que%20procuro%20no%20cat%C3%A1logo.%20Pode%20me%20ajudar%3F" target="_blank" rel="noopener">Pedir ajuda no WhatsApp</a>
     </div>
 
     <!-- ABAS PRINCIPAIS -->
@@ -647,7 +668,7 @@
       </a>
     </div>
 
-    <div class="dev-toggle-wrap">
+    <div class="dev-toggle-wrap dev-hidden" aria-hidden="true">
       <button class="dev-toggle-btn" id="devToggleBtn" aria-expanded="false">
         <i class="fa-solid fa-chevron-down"></i> Você é desenvolvedor?
       </button>
@@ -671,6 +692,15 @@
     </div>
   </div>
 </section>
+
+<a class="floating-whatsapp" href="https://wa.me/5531999471019?text=Ol%C3%A1%21%20Quero%20fazer%20uma%20encomenda%20personalizada%20%F0%9F%92%9C" target="_blank" rel="noopener" aria-label="Fazer encomenda pelo WhatsApp">
+  <i class="fa-brands fa-whatsapp"></i>
+  <span>Encomendar</span>
+</a>
+
+<button class="back-to-top" id="backToTop" type="button" aria-label="Voltar ao topo">
+  <i class="fa-solid fa-arrow-up"></i>
+</button>
 
 <!-- TOAST -->
 <div class="toast" id="toast"></div>

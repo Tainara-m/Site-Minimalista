@@ -1,174 +1,318 @@
-  /* ── TEMA ── */
-  const THEME_KEY = 'tataah.theme';
-  const saved = localStorage.getItem(THEME_KEY) || 'light';
-  document.documentElement.setAttribute('data-theme', saved);
-  const themeBtn = document.getElementById('themeToggle');
-  themeBtn.setAttribute('aria-pressed', String(saved === 'dark'));
-  themeBtn.addEventListener('click', () => {
-    const isDark = document.documentElement.getAttribute('data-theme') === 'dark';
-    const next = isDark ? 'light' : 'dark';
-    document.documentElement.setAttribute('data-theme', next);
-    localStorage.setItem(THEME_KEY, next);
-    themeBtn.setAttribute('aria-pressed', String(next === 'dark'));
-  });
+(() => {
+  'use strict';
 
-  /* ── MENU ── */
-  const menuToggle = document.getElementById('menuToggle');
-  const mainNav    = document.getElementById('mainNav');
-  menuToggle.addEventListener('click', () => {
-    const isOpen = mainNav.classList.toggle('open');
-    menuToggle.classList.toggle('open', isOpen);
-    menuToggle.setAttribute('aria-expanded', String(isOpen));
-  });
-  mainNav.querySelectorAll('a').forEach(l => {
-    l.addEventListener('click', () => {
+  const WPP_NUMBER = '5531999471019';
+  const THEME_KEY = 'tataah.theme';
+  const $ = (selector, scope = document) => scope.querySelector(selector);
+  const $$ = (selector, scope = document) => [...scope.querySelectorAll(selector)];
+
+  const normalize = (value = '') => value
+    .toString()
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .toLowerCase()
+    .trim();
+
+  const makeWppLink = (message) => `https://wa.me/${WPP_NUMBER}?text=${encodeURIComponent(message)}`;
+
+  function initTheme() {
+    const saved = localStorage.getItem(THEME_KEY) || 'light';
+    document.documentElement.setAttribute('data-theme', saved);
+
+    const themeBtn = $('#themeToggle');
+    if (!themeBtn) return;
+
+    themeBtn.setAttribute('aria-pressed', String(saved === 'dark'));
+    themeBtn.addEventListener('click', () => {
+      const isDark = document.documentElement.getAttribute('data-theme') === 'dark';
+      const next = isDark ? 'light' : 'dark';
+      document.documentElement.setAttribute('data-theme', next);
+      localStorage.setItem(THEME_KEY, next);
+      themeBtn.setAttribute('aria-pressed', String(next === 'dark'));
+    });
+  }
+
+  function initMenu() {
+    const menuToggle = $('#menuToggle');
+    const mainNav = $('#mainNav');
+    if (!menuToggle || !mainNav) return;
+
+    menuToggle.addEventListener('click', () => {
+      const isOpen = mainNav.classList.toggle('open');
+      menuToggle.classList.toggle('open', isOpen);
+      menuToggle.setAttribute('aria-expanded', String(isOpen));
+    });
+
+    const closeMenu = () => {
       mainNav.classList.remove('open');
       menuToggle.classList.remove('open');
       menuToggle.setAttribute('aria-expanded', 'false');
+    };
+
+    $$('a', mainNav).forEach(link => {
+      link.addEventListener('click', closeMenu);
     });
-  });
 
-  /* ── NAV ATIVO AO ROLAR ── */
-  const navLinks = document.querySelectorAll('nav a[href^="#"]');
-  const sections = document.querySelectorAll('section[id]');
+    window.addEventListener('resize', () => {
+      if (window.innerWidth > 860) closeMenu();
+    }, { passive: true });
+  }
 
-  const navObserver = new IntersectionObserver((entries) => {
-    entries.forEach(entry => {
-      if (entry.isIntersecting) {
-        navLinks.forEach(l => l.classList.remove('active'));
-        const active = document.querySelector(`nav a[href="#${entry.target.id}"]`);
-        if (active) active.classList.add('active');
+  function initActiveNav() {
+    const navLinks = $$('nav a[href^="#"]');
+    const sections = $$('section[id]');
+    if (!navLinks.length || !sections.length || !('IntersectionObserver' in window)) return;
+
+    const navObserver = new IntersectionObserver((entries) => {
+      entries.forEach(entry => {
+        if (!entry.isIntersecting) return;
+        navLinks.forEach(link => link.classList.remove('active'));
+        $(`nav a[href="#${entry.target.id}"]`)?.classList.add('active');
+      });
+    }, { rootMargin: '-40% 0px -55% 0px', threshold: 0 });
+
+    sections.forEach(section => navObserver.observe(section));
+  }
+
+  function initReveal() {
+    const elements = $$('.reveal');
+    if (!elements.length) return;
+
+    if (!('IntersectionObserver' in window)) {
+      elements.forEach(el => el.classList.add('visible'));
+      return;
+    }
+
+    const observer = new IntersectionObserver(entries => {
+      entries.forEach(entry => {
+        if (!entry.isIntersecting) return;
+        entry.target.classList.add('visible');
+        observer.unobserve(entry.target);
+      });
+    }, { threshold: .1, rootMargin: '0px 0px -50px 0px' });
+
+    elements.forEach(el => observer.observe(el));
+  }
+
+  function getCardData(card) {
+    const cat = $('.pcard-cat', card)?.textContent.trim() || '';
+    const title = $('h4', card)?.textContent.trim() || 'Produto personalizado';
+    const desc = $('p:not(.pcard-cat)', card)?.textContent.trim() || '';
+    const price = $('.pcard-price', card)?.textContent.trim() || 'Consultar';
+    const sub = card.dataset.sub || 'digital';
+    const image = $('.pcard-image img, img', card);
+    return { cat, title, desc, price, sub, image };
+  }
+
+  function enhanceProductCards() {
+    $$('.pcard').forEach(card => {
+      if (card.dataset.enhanced === 'true') return;
+      card.dataset.enhanced = 'true';
+      card.setAttribute('tabindex', '0');
+      card.setAttribute('role', 'button');
+      card.setAttribute('aria-label', `Ver detalhes de ${getCardData(card).title}`);
+
+      const action = document.createElement('a');
+      action.className = 'pcard-action';
+      action.target = '_blank';
+      action.rel = 'noopener';
+      action.innerHTML = '<i class="fa-brands fa-whatsapp"></i> Pedir orçamento';
+      const { title } = getCardData(card);
+      action.href = makeWppLink(`Olá! Tenho interesse no produto: ${title}. Poderia me passar valores, prazo e opções de personalização? 💜`);
+      card.appendChild(action);
+    });
+  }
+
+  function initCatalog() {
+    const tabs = $$('.cat-tab');
+    const searchInput = $('#catalogSearch');
+    const clearBtn = $('#clearCatalogSearch');
+    const resultCount = $('#catalogResultCount');
+    const emptyState = $('#catalogEmpty');
+
+    const getActivePanel = () => $('.cat-panel.active');
+
+    function updateVisibleCards() {
+      const term = normalize(searchInput?.value || '');
+      let totalVisible = 0;
+      let activeVisible = 0;
+
+      $$('.cat-panel').forEach(panel => {
+        const activeSub = $('.subcat-btn.active', panel)?.dataset.sub || 'todos';
+
+        $$('.pcard', panel).forEach(card => {
+          const data = normalize(card.textContent);
+          const matchesSearch = !term || data.includes(term);
+          const matchesSub = activeSub === 'todos' || card.dataset.sub === activeSub;
+          const visible = matchesSearch && matchesSub;
+          card.classList.toggle('hidden', !visible);
+          if (visible) totalVisible += 1;
+          if (visible && panel.classList.contains('active')) activeVisible += 1;
+        });
+      });
+
+      if (resultCount) {
+        resultCount.textContent = term
+          ? `${totalVisible} produto(s) encontrado(s) para “${searchInput.value}”.`
+          : '';
       }
+      if (emptyState) emptyState.hidden = term ? totalVisible > 0 : activeVisible > 0;
+      if (clearBtn) clearBtn.hidden = !term;
+    }
+
+    tabs.forEach(tab => {
+      tab.addEventListener('click', () => {
+        tabs.forEach(t => { t.classList.remove('active'); t.setAttribute('aria-selected', 'false'); });
+        $$('.cat-panel').forEach(panel => panel.classList.remove('active'));
+        tab.classList.add('active');
+        tab.setAttribute('aria-selected', 'true');
+        $(`#panel-${tab.dataset.tab}`)?.classList.add('active');
+        updateVisibleCards();
+      });
     });
-  }, { rootMargin: '-40% 0px -55% 0px', threshold: 0 });
-  sections.forEach(s => navObserver.observe(s));
 
-  /* ── REVEAL AO ROLAR ── */
-  const obs = new IntersectionObserver(entries => {
-    entries.forEach(e => { if (e.isIntersecting) { e.target.classList.add('visible'); obs.unobserve(e.target); } });
-  }, { threshold: .1, rootMargin: '0px 0px -50px 0px' });
-  document.querySelectorAll('.reveal').forEach(el => obs.observe(el));
-
-  /* ── CATÁLOGO — ABAS + SUBCATEGORIAS ── */
-  // Abas principais
-  document.querySelectorAll('.cat-tab').forEach(tab => {
-    tab.addEventListener('click', () => {
-      document.querySelectorAll('.cat-tab').forEach(t => { t.classList.remove('active'); t.setAttribute('aria-selected','false'); });
-      document.querySelectorAll('.cat-panel').forEach(p => p.classList.remove('active'));
-      tab.classList.add('active');
-      tab.setAttribute('aria-selected','true');
-      document.getElementById('panel-' + tab.dataset.tab).classList.add('active');
-    });
-  });
-
-  // Subcategorias (funciona para qualquer painel)
-  document.querySelectorAll('.subcat-row').forEach(row => {
-    const grid = row.nextElementSibling; // .products-grid
-    row.querySelectorAll('.subcat-btn').forEach(btn => {
-      btn.addEventListener('click', () => {
-        row.querySelectorAll('.subcat-btn').forEach(b => b.classList.remove('active'));
-        btn.classList.add('active');
-        const sub = btn.dataset.sub;
-        grid.querySelectorAll('.pcard').forEach(card => {
-          card.classList.toggle('hidden', sub !== 'todos' && card.dataset.sub !== sub);
+    $$('.subcat-row').forEach(row => {
+      const grid = row.nextElementSibling;
+      if (!grid) return;
+      $$('.subcat-btn', row).forEach(btn => {
+        btn.addEventListener('click', () => {
+          $$('.subcat-btn', row).forEach(button => button.classList.remove('active'));
+          btn.classList.add('active');
+          updateVisibleCards();
         });
       });
     });
-  });
 
-  /* ── TOGGLE DEV ── */
-  const devToggleBtn = document.getElementById('devToggleBtn');
-  const devSection   = document.getElementById('devSection');
-  devToggleBtn.addEventListener('click', () => {
-    const isOpen = devSection.classList.toggle('open');
-    devToggleBtn.classList.toggle('open', isOpen);
-    devToggleBtn.setAttribute('aria-expanded', String(isOpen));
-  });
+    searchInput?.addEventListener('input', updateVisibleCards);
+    clearBtn?.addEventListener('click', () => {
+      searchInput.value = '';
+      searchInput.focus();
+      updateVisibleCards();
+    });
 
-  /* ── TOAST ── */
-  const toast = document.getElementById('toast');
-  let toastTimer;
-
-  function showToast(msg) {
-    toast.textContent = msg;
-    toast.classList.add('show');
-    clearTimeout(toastTimer);
-    toastTimer = setTimeout(() => toast.classList.remove('show'), 3000);
+    updateVisibleCards();
   }
 
-  const btnWpp = document.getElementById('btnWhatsapp');
-  if (btnWpp) {
-    btnWpp.addEventListener('click', () => showToast('Abrindo WhatsApp... 💜'));
+  function initDevToggle() {
+    const devToggleBtn = $('#devToggleBtn');
+    const devSection = $('#devSection');
+    if (!devToggleBtn || !devSection) return;
+
+    devToggleBtn.addEventListener('click', () => {
+      const isOpen = devSection.classList.toggle('open');
+      devToggleBtn.classList.toggle('open', isOpen);
+      devToggleBtn.setAttribute('aria-expanded', String(isOpen));
+    });
   }
 
-  /* ── MODAL ── */
-  const subEmoji = {
-    'volta-aulas':'📚','carnaval':'🎭','dia-mulher':'🌸','pascoa':'🐣',
-    'dia-maes':'💐','dia-namorados':'💕','ferias':'☀️','dia-pais':'👔',
-    'primavera':'🌼','dia-professor':'🍎','dia-criancas':'🎈',
-    'corporativo':'🏢','natal':'🎄','ano-novo':'🥂',
-    'festa':'🎉','batizado':'🕊️','casamento':'💍','outros':'✨','digital':'💻'
-  };
+  function initToast() {
+    const toast = $('#toast');
+    if (!toast) return;
+    let toastTimer;
 
-  const overlay        = document.getElementById('modalOverlay');
-  const modalClose     = document.getElementById('modalClose');
-  const modalImageWrap = document.getElementById('modalImageWrap');
-  const modalCat       = document.getElementById('modalCat');
-  const modalTitleEl   = document.getElementById('modalTitle');
-  const modalDesc      = document.getElementById('modalDesc');
-  const modalPrice     = document.getElementById('modalPrice');
-  const modalContactBtn= document.getElementById('modalContactBtn');
-  const modalWppBtn    = document.getElementById('modalWppBtn');
+    window.showTataahToast = (message) => {
+      toast.textContent = message;
+      toast.classList.add('show');
+      clearTimeout(toastTimer);
+      toastTimer = setTimeout(() => toast.classList.remove('show'), 3000);
+    };
 
-  function openModal(card) {
-    const cat   = card.querySelector('.pcard-cat')?.textContent || '';
-    const title = card.querySelector('h4')?.textContent         || '';
-    const desc  = card.querySelector('p')?.textContent          || '';
-    const price = card.querySelector('.pcard-price')?.textContent|| '';
-    const sub   = card.dataset.sub || 'digital';
-    const emoji = subEmoji[sub] || '🎁';
-    const cardImage = card.querySelector('.pcard-image img, img');
+    $('#btnWhatsapp')?.addEventListener('click', () => window.showTataahToast('Abrindo WhatsApp... 💜'));
+  }
 
-    if (cardImage && cardImage.src) {
-      const altText = cardImage.alt || title || 'Produto';
-      modalImageWrap.innerHTML = `<img class="modal-img" src="${cardImage.src}" alt="${altText}">`;
-    } else {
-      modalImageWrap.innerHTML = `<div class="modal-img-emoji">${emoji}</div>`;
+  function initModal() {
+    const subEmoji = {
+      'volta-aulas':'📚','carnaval':'🎭','dia-mulher':'🌸','pascoa':'🐣',
+      'dia-maes':'💐','dia-namorados':'💕','ferias':'☀️','dia-pais':'👔',
+      'primavera':'🌼','dia-professor':'🍎','dia-criancas':'🎈',
+      'corporativo':'🏢','natal':'🎄','ano-novo':'🥂','festa':'🎉',
+      'batizado':'🕊️','casamento':'💍','outros':'✨','digital':'💻'
+    };
+
+    const overlay = $('#modalOverlay');
+    const modalClose = $('#modalClose');
+    const modalImageWrap = $('#modalImageWrap');
+    const modalCat = $('#modalCat');
+    const modalTitleEl = $('#modalTitle');
+    const modalDesc = $('#modalDesc');
+    const modalPrice = $('#modalPrice');
+    const modalContactBtn = $('#modalContactBtn');
+    const modalWppBtn = $('#modalWppBtn');
+    if (!overlay || !modalClose || !modalWppBtn) return;
+
+    function openModal(card) {
+      const { cat, title, desc, price, sub, image } = getCardData(card);
+      const emoji = subEmoji[sub] || '🎁';
+
+      if (image?.src) {
+        const altText = image.alt || title || 'Produto';
+        modalImageWrap.innerHTML = `<img class="modal-img" src="${image.src}" alt="${altText}">`;
+      } else {
+        modalImageWrap.innerHTML = `<div class="modal-img-emoji" aria-hidden="true">${emoji}</div>`;
+      }
+
+      modalCat.textContent = cat;
+      modalTitleEl.textContent = title;
+      modalDesc.textContent = desc;
+      modalPrice.textContent = price;
+
+      const message = `Olá! Tenho interesse no produto: ${title}. Poderia me passar valores, prazo e opções de personalização? 💜`;
+      modalWppBtn.href = makeWppLink(message);
+      modalContactBtn.dataset.product = title;
+
+      overlay.classList.add('open');
+      document.body.style.overflow = 'hidden';
+      modalClose.focus();
     }
 
-    modalCat.textContent     = cat;
-    modalTitleEl.textContent = title;
-    modalDesc.textContent    = desc;
-    modalPrice.textContent   = price;
+    function closeModal() {
+      overlay.classList.remove('open');
+      document.body.style.overflow = '';
+    }
 
-    const wppMsg = encodeURIComponent(`Olá! Tenho interesse no produto: *${title}*. Poderia me dar mais informações? 💜`);
-    modalWppBtn.href = `https://wa.me/5531999471019?text=${wppMsg}`;
+    document.addEventListener('click', event => {
+      const card = event.target.closest('.pcard');
+      if (card && !event.target.closest('button') && !event.target.closest('a')) openModal(card);
+    });
 
-    overlay.classList.add('open');
-    document.body.style.overflow = 'hidden';
-    modalClose.focus();
+    document.addEventListener('keydown', event => {
+      if (event.key === 'Escape') closeModal();
+      if ((event.key === 'Enter' || event.key === ' ') && event.target.classList.contains('pcard')) {
+        event.preventDefault();
+        openModal(event.target);
+      }
+    });
+
+    modalClose.addEventListener('click', closeModal);
+    overlay.addEventListener('click', event => { if (event.target === overlay) closeModal(); });
+
+    modalContactBtn?.addEventListener('click', () => {
+      const product = modalContactBtn.dataset.product || 'produto personalizado';
+      window.open(makeWppLink(`Olá! Quero solicitar orçamento para: ${product}. Pode me ajudar? 💜`), '_blank', 'noopener');
+      closeModal();
+    });
   }
 
-  function closeModal() {
-    overlay.classList.remove('open');
-    document.body.style.overflow = '';
+  function initBackToTop() {
+    const button = $('#backToTop');
+    if (!button) return;
+
+    const toggleButton = () => button.classList.toggle('show', window.scrollY > 650);
+    window.addEventListener('scroll', toggleButton, { passive: true });
+    button.addEventListener('click', () => window.scrollTo({ top: 0, behavior: 'smooth' }));
+    toggleButton();
   }
 
-  // Abre ao clicar no card
-  document.addEventListener('click', e => {
-    const card = e.target.closest('.pcard');
-    if (card && !e.target.closest('button') && !e.target.closest('a')) openModal(card);
+  document.addEventListener('DOMContentLoaded', () => {
+    initTheme();
+    initMenu();
+    initActiveNav();
+    initReveal();
+    initToast();
+    enhanceProductCards();
+    initCatalog();
+    initDevToggle();
+    initModal();
+    initBackToTop();
   });
-
-  // Fecha
-  modalClose.addEventListener('click', closeModal);
-  overlay.addEventListener('click', e => { if (e.target === overlay) closeModal(); });
-  document.addEventListener('keydown', e => { if (e.key === 'Escape') closeModal(); });
-
-  // "Solicitar" → fecha modal + rola para contato
-  modalContactBtn.addEventListener('click', () => {
-    closeModal();
-    setTimeout(() => {
-      document.getElementById('contato').scrollIntoView({ behavior: 'smooth' });
-    }, 300);
-  });
+})();
